@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0259BC">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AfriCare">
+<meta name="description" content="AfriCare — La santé, sans attendre. Réservation et suivi de file d'attente médicale.">
+<link rel="manifest" href="manifest.json">
+<title>AfriCare</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap');
+  :root {
+    --blue: #0259BC;
+    --blue-dark: #123249;
+    --green: #0BA251;
+    --ochre: #E08E45;
+    --red: #C0392B;
+    --sand: #FAF3E7;
+    --ink: #16202A;
+    --card: #FFFFFF;
+    --line: #16202A;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--sand); color: var(--ink);
+    font-family: 'Work Sans', system-ui, sans-serif;
+    overscroll-behavior: none;
+  }
+  #app {
+    display: flex; flex-direction: column;
+    height: 100%; max-width: 480px; margin: 0 auto;
+    background: var(--sand);
+    position: relative;
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+  }
+  .install-banner {
+    display: none;
+    background: var(--blue); color: #fff;
+    padding: 10px 14px; font-size: 13px;
+    align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .install-banner.show { display: flex; }
+  .install-banner button {
+    background: #fff; color: var(--blue); border: none;
+    font-family: 'Baloo 2', sans-serif; font-weight: 700;
+    padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px;
+  }
+  .topbar {
+    background: var(--blue); color: #fff;
+    padding: 12px 16px 10px;
+    display: flex; flex-direction: column; align-items: center;
+    flex-shrink: 0;
+  }
+  .topbar .brand {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 18px;
+  }
+  .topbar small { font-size: 11px; opacity: 0.9; margin-top: 2px; font-weight: 400; }
+  .role-bar {
+    display: flex; background: #fff; border-bottom: 1px solid #e5ddc9;
+    flex-shrink: 0;
+  }
+  .role-bar button {
+    flex: 1; border: none; background: none; padding: 10px 4px;
+    font-family: 'Work Sans', sans-serif; font-size: 12px; font-weight: 600;
+    color: #8a8071; cursor: pointer; border-bottom: 3px solid transparent;
+  }
+  .role-bar button.on { color: var(--blue); border-bottom-color: var(--blue); }
+  .scr-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px; }
+  .search-box {
+    background: #fff; border: 1.5px solid #d8cdb0; border-radius: 12px;
+    padding: 12px 14px; font-size: 14px; color: #8a8071; margin-bottom: 12px;
+  }
+  .doc-card {
+    background: #fff; border: 1.5px solid #e3dccb; border-radius: 14px;
+    padding: 12px; display: flex; gap: 12px; align-items: center;
+    margin-bottom: 10px; cursor: pointer;
+  }
+  .doc-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 16px; flex-shrink: 0;
+  }
+  .doc-info b { display: block; font-size: 15px; } .doc-info span { font-size: 12px; color: #8a8071; }
+  .back-link { font-size: 14px; color: var(--blue); font-weight: 600; margin-bottom: 12px; cursor: pointer; display: inline-block; }
+  .slot-btn {
+    width: 100%; text-align: left; background: #fff; border: 1.5px solid #e3dccb;
+    border-radius: 12px; padding: 14px; font-size: 14px; margin-bottom: 8px;
+    cursor: pointer; font-family: 'Work Sans', sans-serif; color: var(--ink);
+  }
+  .paytabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .paytab {
+    text-align: center; padding: 12px 6px; border-radius: 12px;
+    border: 1.5px solid #e3dccb; font-size: 12px; font-weight: 700;
+    cursor: pointer; background: #fff; color: #8a8071; line-height: 1.3;
+  }
+  .paytab.on { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .pay-summary {
+    background: #fff; border: 1.5px solid #e3dccb; border-radius: 14px;
+    padding: 16px; margin-bottom: 12px; text-align: center;
+  }
+  .pay-summary .amount { font-family: 'Baloo 2', sans-serif; font-size: 28px; color: var(--blue); font-weight: 800; }
+  .payfield {
+    width: 100%; padding: 12px; border-radius: 10px; border: 1.5px solid #d8cdb0;
+    margin-bottom: 8px; font-size: 14px; background: #fff;
+  }
+  .payfield-row { display: flex; gap: 8px; } .payfield-row .payfield { flex: 1; }
+  .big-btn {
+    width: 100%; border: none; border-radius: 14px; padding: 16px;
+    font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 16px;
+    color: #fff; background: var(--ochre); cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,.15); margin-bottom: 10px;
+  }
+  .big-btn.green { background: var(--green); }
+  .secure-note {
+    font-size: 12px; color: #6b6152; text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .ticket-card {
+    background: #fff; border: 1.5px solid #e3dccb; border-radius: 16px;
+    padding: 18px; margin-bottom: 12px; text-align: center;
+  }
+  .ticket-card .num { font-family: 'Baloo 2', sans-serif; font-size: 36px; color: var(--blue); font-weight: 800; }
+  .qrbox {
+    width: 80px; height: 80px; margin: 10px auto;
+    background: repeating-conic-gradient(#16202A 0% 25%, #fff 0% 50%);
+    background-size: 12px 12px; border: 3px solid #16202A; border-radius: 8px;
+  }
+  .ticket-row2 { display: flex; justify-content: space-around; margin-top: 12px; }
+  .ticket-row2 div span { display: block; font-size: 11px; color: #8a8071; }
+  .ticket-row2 div b { font-size: 18px; color: var(--ochre); font-family: 'Baloo 2', sans-serif; }
+  .progress-track { background: #EDE6D3; border-radius: 6px; height: 10px; overflow: hidden; margin-top: 12px; }
+  .progress-fill { height: 100%; transition: width .35s ease, background .35s ease; }
+  .alertbar {
+    margin-top: 12px; text-align: center; font-size: 13px; font-weight: 700;
+    padding: 10px; border-radius: 10px;
+  }
+  .u-calm { background: #E2EFDA; color: var(--green); }
+  .u-soon { background: #FBEAD9; color: #a15b1f; }
+  .u-now { background: #FBD9D4; color: var(--red); }
+  .notif-btn {
+    width: 100%; border: 2px dashed var(--blue); background: none; color: var(--blue);
+    border-radius: 12px; padding: 12px; font-family: 'Baloo 2', sans-serif;
+    font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 8px;
+  }
+  .bottomnav {
+    display: flex; border-top: 1px solid #e5ddc9; background: #fff;
+    flex-shrink: 0; padding-bottom: var(--safe-bottom);
+  }
+  .bottomnav button {
+    flex: 1; border: none; background: none; padding: 10px 0 8px;
+    font-size: 11px; font-family: 'Work Sans', sans-serif; color: #8a8071; cursor: pointer;
+  }
+  .bottomnav button.on { color: var(--blue); font-weight: 700; }
+  .bottomnav button span { display: block; font-size: 18px; margin-bottom: 2px; }
+  .lockscreen {
+    position: absolute; inset: 0; background: linear-gradient(180deg, #1a2a3d, #0a1420);
+    z-index: 50; display: flex; flex-direction: column; align-items: center;
+    padding-top: calc(40px + var(--safe-top)); color: #fff;
+  }
+  .lockscreen .time { font-weight: 300; font-size: 56px; }
+  .lockscreen .date { font-size: 14px; opacity: 0.8; margin-bottom: 28px; }
+  .notif-card {
+    width: 92%; border-radius: 18px; padding: 14px 16px;
+    display: flex; gap: 12px; align-items: flex-start;
+    box-shadow: 0 10px 30px rgba(0,0,0,.3);
+  }
+  .notif-card .ic {
+    width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .notif-card .txt b { display: block; font-size: 14px; margin-bottom: 3px; }
+  .notif-card .txt span { font-size: 12.5px; opacity: 0.95; line-height: 1.4; }
+  .notif-card .bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.22); margin-top: 8px; overflow: hidden; }
+  .notif-card .bar i { display: block; height: 100%; }
+  .lock-calm { background: rgba(11,162,81,.9); } .lock-calm .ic { background: #0BA251; }
+  .lock-soon { background: rgba(224,142,69,.94); } .lock-soon .ic { background: #E08E45; }
+  .lock-now { background: rgba(192,57,43,.95); } .lock-now .ic { background: #C0392B; }
+  .closelock { margin-top: auto; margin-bottom: 30px; font-size: 14px; color: #cfd8e0; text-decoration: underline; cursor: pointer; }
+  .progress-popup {
+    position: absolute; left: 12px; right: 12px; bottom: 80px; z-index: 40;
+    background: #fff; border: 2px solid var(--line); border-radius: 16px;
+    padding: 16px; box-shadow: 0 10px 0 var(--line); display: none;
+  }
+  .progress-popup.show { display: block; animation: popIn .25s ease; }
+  @keyframes popIn { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .progress-popup .pp-title { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 15px; color: var(--blue); margin-bottom: 8px; }
+  .progress-popup .pp-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+  .progress-popup .pp-row b { font-family: 'Baloo 2', sans-serif; color: var(--ochre); }
+  .progress-popup .pp-close { position: absolute; top: 10px; right: 12px; font-size: 16px; cursor: pointer; color: #8a8071; }
+  .pro-header { background: var(--blue-dark); color: #fff; padding: 14px 16px; }
+  .pro-header .who { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 16px; }
+  .pro-header .sub2 { font-size: 12px; color: #bcd0e0; margin-top: 2px; }
+  .logout { float: right; font-size: 12px; color: #bcd0e0; cursor: pointer; text-decoration: underline; }
+  .stat-row { display: flex; gap: 8px; padding: 12px 14px 0; }
+  .stat-box {
+    flex: 1; background: #fff; border: 1.5px solid #e3dccb; border-radius: 12px;
+    padding: 10px; text-align: center;
+  }
+  .stat-box b { display: block; font-family: 'Baloo 2', sans-serif; font-size: 20px; color: var(--blue); }
+  .stat-box span { font-size: 10px; color: #8a8071; }
+  .queue-list { padding: 12px 14px; }
+  .qrow {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #fff; border: 1.5px solid #e3dccb; border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 8px; font-size: 14px;
+  }
+  .qrow.current { border-color: var(--blue); box-shadow: 0 0 0 2px #DCE6F1 inset; }
+  .qtag { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+  .qtag.wait { background: #FBEAD9; color: #a15b1f; }
+  .qtag.present { background: #DCE6F1; color: var(--blue); }
+  .qtag.done { background: #E2EFDA; color: var(--green); }
+  .qtag.skip { background: #f6d5d0; color: #a5342a; }
+  .action-row { display: flex; gap: 8px; padding: 0 14px 16px; }
+  .action-row button {
+    flex: 1; border: none; border-radius: 12px; padding: 14px 4px;
+    color: #fff; font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 14px;
+    cursor: pointer; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+  }
+  .a-next { background: var(--green); } .a-skip { background: var(--red); } .a-pause { background: #8a7f6b; }
+  .login-box { max-width: 300px; margin: 40px auto; text-align: center; padding: 0 16px; }
+  .login-box input {
+    width: 100%; padding: 12px; border-radius: 10px; border: 1.5px solid #d8cdb0;
+    margin-bottom: 10px; font-size: 14px; background: #fff;
+  }
+  .conf-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #E2EFDA; color: var(--green); font-size: 12px; font-weight: 600;
+    padding: 6px 12px; border-radius: 999px; margin-top: 12px;
+  }
+  .service-card {
+    background: #fff; border: 1.5px solid #e3dccb; border-radius: 14px;
+    padding: 14px; margin-bottom: 10px;
+  }
+  .service-card b { display: block; font-size: 14px; }
+  .service-card span { font-size: 12px; color: #8a8071; }
+  .service-card .badge {
+    float: right; font-size: 11px; font-weight: 700; background: var(--green);
+    color: #fff; padding: 3px 10px; border-radius: 999px;
+  }
+  .service-card .badge.off { background: #c8bfa9; }
+  .addwalkin {
+    width: 100%; border: 2px dashed var(--ochre); background: none; color: var(--ochre);
+    border-radius: 12px; padding: 14px; font-family: 'Baloo 2', sans-serif;
+    font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 8px;
+  }
+  .footer-note {
+    text-align: center; font-size: 11px; color: #8a8071; padding: 8px;
+    background: #fff; border-top: 1px solid #e5ddc9;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="install-banner" id="installBanner">
+    <span>Installez AfriCare sur votre téléphone</span>
+    <button id="installBtn">Installer</button>
+  </div>
+
+  <div class="topbar" id="topbar">
+    <div class="brand">
+      <svg height="28" viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg" aria-label="AfriCare">
+        <path d="M4 28 Q2 10 16 6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="4" cy="29" r="2.2" fill="#0BA251"/>
+        <circle cx="16" cy="6" r="2.2" fill="#fff"/>
+        <path d="M24 8 C26 4 34 3 40 7 C46 3 54 7 56 14 C58 21 55 30 50 34 C44 40 34 40 28 36 C24 39 18 34 16 26 C14 18 18 12 24 8 Z" fill="none" stroke="#0BA251" stroke-width="2.2"/>
+        <rect x="34" y="15" width="8" height="14" rx="1.5" fill="#fff"/>
+        <rect x="30" y="19" width="16" height="6" rx="1.5" fill="#fff"/>
+        <text x="64" y="26" font-family="system-ui,sans-serif" font-weight="800" font-size="16" fill="#fff">AfriCare</text>
+      </svg>
+    </div>
+    <small id="topSub">La santé, sans attendre.</small>
+  </div>
+
+  <div class="role-bar" id="roleBar">
+    <button class="on" data-role="patient">Patient</button>
+    <button data-role="pro">Professionnel</button>
+    <button data-role="accueil">Accueil</button>
+  </div>
+
+  <div class="scr-body" id="scrBody"></div>
+
+  <div class="bottomnav" id="bottomNav" style="display:none;"></div>
+  <div class="footer-note" id="footerNote">AfriCare · Données confidentielles · Phase test Dakar</div>
+</div>
+
+<script>
+  let tickets = ["A121","A122","A123","A124","A125","A126"];
+  let statuses = ["done","done","present","wait","wait","wait"];
+  let currentIndex = 2;
+  let paused = false;
+  let myTicketIndex = 3;
+  let currentRole = 'patient';
+  let pScreen = 'home';
+  let selectedDoc = null;
+  let selectedSlot = '';
+  let paymentMethod = 'wave';
+  let lockVisible = false;
+  let popupVisible = false;
+  let proLoggedIn = false;
+  let deferredPrompt = null;
+
+  const doctors = [
+    { name:"Dr. Diop", spec:"Cardiologie", color:"#0BA251", slots:["10h30","11h15","14h00"] },
+    { name:"Dr. Fall", spec:"Dentisterie", color:"#0259BC", slots:["09h00","10h00"] },
+    { name:"Dr. Sarr", spec:"Médecine générale", color:"#E08E45", slots:["11h30","13h30","15h00"] },
+  ];
+  const otherServices = [
+    { name:'Dentisterie — Dr. Fall', count:3 },
+    { name:'Médecine générale — Dr. Sarr', count:5 },
+    { name:'Chirurgie — Clinique associée', count:0 },
+  ];
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('installBanner').classList.add('show');
+  });
+  document.getElementById('installBtn').addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') document.getElementById('installBanner').classList.remove('show');
+    deferredPrompt = null;
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
+  function estimateMinutes(ahead) {
+    if (ahead === null || ahead === undefined) return '—';
+    if (ahead === 0) return '0 min';
+    return (ahead * 12) + ' min';
+  }
+
+  function urgency(sel) {
+    if (statuses[sel] === 'done') return { level:'calm', ahead:0, pct:100, txt:'✔ Consultation déjà passée', color:'#0BA251', time:'0 min' };
+    if (statuses[sel] === 'present') return { level:'now', ahead:0, pct:100, txt:"C'est votre tour — dirigez-vous vers le cabinet", color:'#C0392B', time:'0 min' };
+    if (statuses[sel] === 'skip') return { level:'soon', ahead:null, pct:0, txt:"Marqué(e) absent(e) — contactez l'accueil", color:'#E08E45', time:'—' };
+    let ahead = 0;
+    for (let i = currentIndex; i < sel; i++) {
+      if (statuses[i] === 'present' || statuses[i] === 'wait') ahead++;
+    }
+    const pct = Math.max(6, 100 - (ahead / 6) * 100);
+    const timeStr = estimateMinutes(ahead);
+    if (ahead <= 1) return { level:'soon', ahead, pct, txt:'Bientôt votre tour — rapprochez-vous de la salle', color:'#E08E45', time:timeStr };
+    return { level:'calm', ahead, pct, txt:'En attente — restez à proximité', color:'#0BA251', time:timeStr };
+  }
+
+  function render() {
+    const body = document.getElementById('scrBody');
+    const bottom = document.getElementById('bottomNav');
+    const topSub = document.getElementById('topSub');
+    lockVisible = false;
+    popupVisible = false;
+
+    if (currentRole === 'patient') {
+      topSub.textContent = pScreen === 'ticket' ? 'Suivi en direct' : (pScreen === 'pay' ? 'Paiement sécurisé' : 'La santé, sans attendre.');
+      body.innerHTML = patientHTML();
+      bottom.style.display = 'flex';
+      bottom.innerHTML = `
+        <button data-nav="home" class="${pScreen==='home'?'on':''}"><span>🔍</span>Rechercher</button>
+        <button data-nav="ticket" class="${pScreen==='ticket'?'on':''}"><span>🎟</span>Mes tickets</button>
+        <button data-nav="profile" class="${pScreen==='profile'?'on':''}"><span>👤</span>Profil</button>`;
+      bindPatient();
+    } else if (currentRole === 'pro') {
+      topSub.textContent = 'Espace professionnel';
+      body.innerHTML = proHTML();
+      bottom.style.display = 'none';
+      bindPro();
+    } else {
+      topSub.textContent = 'Vue établissement';
+      body.innerHTML = accueilHTML();
+      bottom.style.display = 'none';
+      bindAccueil();
+    }
+  }
+
+  function patientHTML() {
+    if (pScreen === 'home') {
+      let html = '<div class="search-box">🔍 Rechercher un médecin…</div>';
+      doctors.forEach((d, i) => {
+        html += `<div class="doc-card" data-doc="${i}">
+          <div class="doc-avatar" style="background:${d.color}">${(d.name.split(' ')[1]||d.name).charAt(0)}</div>
+          <div class="doc-info"><b>${d.name}</b><span>${d.spec}</span></div>
+        </div>`;
+      });
+      return html;
+    }
+    if (pScreen === 'slots') {
+      let html = `<div class="back-link" data-back="home">← Retour</div>
+        <div style="font-size:14px;color:#8a7f6b;margin-bottom:10px;">Choisissez un créneau :</div>`;
+      selectedDoc.slots.forEach(s => {
+        html += `<button class="slot-btn" data-slot="${s}">🕐 Aujourd’hui — ${s}</button>`;
+      });
+      return html;
+    }
+    if (pScreen === 'pay') {
+      let fields = '';
+      if (paymentMethod === 'wave' || paymentMethod === 'om') {
+        fields = '<input class="payfield" placeholder="Numéro Mobile Money (ex: 77 123 45 67)">';
+      } else if (paymentMethod === 'card') {
+        fields = `<input class="payfield" placeholder="Numéro de carte">
+          <div class="payfield-row"><input class="payfield" placeholder="MM/AA"><input class="payfield" placeholder="CVC"></div>`;
+      } else {
+        fields = '<div style="text-align:center;padding:16px;font-size:14px;color:#6b6152;">Paiement sécurisé via Apple Pay<br><span style="font-size:36px;">🍎</span></div>';
+      }
+      return `<div class="back-link" data-back="slots">← Retour</div>
+        <div class="paytabs">
+          <div class="paytab ${paymentMethod==='wave'?'on':''}" data-pm="wave">Wave</div>
+          <div class="paytab ${paymentMethod==='om'?'on':''}" data-pm="om">Orange Money</div>
+          <div class="paytab ${paymentMethod==='card'?'on':''}" data-pm="card">Carte bancaire</div>
+          <div class="paytab ${paymentMethod==='apple'?'on':''}" data-pm="apple">Apple Pay</div>
+        </div>
+        <div class="pay-summary">
+          <div style="font-size:13px;color:#8a7f6b;">${selectedDoc.name} — ${selectedDoc.spec}</div>
+          <div style="font-size:13px;color:#8a7f6b;margin-bottom:6px;">Créneau : ${selectedSlot}</div>
+          <div class="amount">200 FCFA</div>
+        </div>
+        ${fields}
+        <button class="big-btn" id="payBtn">Confirmer le paiement</button>
+        <div class="secure-note">🔒 Paiement sécurisé · Vos données restent confidentielles</div>`;
+    }
+    if (pScreen === 'ticket') {
+      const u = urgency(myTicketIndex);
+      const cls = u.level === 'calm' ? 'u-calm' : (u.level === 'soon' ? 'u-soon' : 'u-now');
+      let opts = '';
+      tickets.forEach((t, i) => {
+        opts += `<option value="${i}" ${i===myTicketIndex?'selected':''}>Voir comme ${t}</option>`;
+      });
+      return `<div class="ticket-card">
+          <div style="font-size:12px;color:#8a7f6b;">Votre ticket</div>
+          <div class="num">${tickets[myTicketIndex]}</div>
+          <div class="qrbox"></div>
+          <div class="ticket-row2">
+            <div><span>Devant vous</span><b>${u.ahead===null?'—':u.ahead}</b></div>
+            <div><span>Temps estimé</span><b>${u.time}</b></div>
+            <div><span>Médecin</span><b style="font-size:13px;">Dr. Diop</b></div>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:${u.pct}%;background:${u.color}"></div></div>
+          <div class="alertbar ${cls}">${u.txt}</div>
+        </div>
+        <select id="ticketSelect" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid #d8cdb0;font-size:13px;margin-bottom:8px;">${opts}</select>
+        <button class="notif-btn" id="lockBtn">🔔 Aperçu notification (écran verrouillé)</button>
+        <button class="notif-btn" id="popupBtn" style="border-color:var(--green);color:var(--green);">📋 Suivi de progression</button>
+        ${lockVisible ? lockOverlayHTML() : ''}
+        ${popupVisible ? progressPopupHTML() : ''}`;
+    }
+    return `<div style="text-align:center;padding-top:40px;">
+      <div style="font-size:48px;">👤</div>
+      <p style="font-size:15px;color:#8a7f6b;margin-top:12px;">Aissatou Ndiaye</p>
+      <p style="font-size:13px;color:#8a7f6b;">Historique et moyens de paiement — non simulés ici.</p>
+      <div class="conf-badge">🔒 Données confidentielles</div>
+    </div>`;
+  }
+
+  function lockOverlayHTML() {
+    const u = urgency(myTicketIndex);
+    const cls = u.level === 'calm' ? 'lock-calm' : (u.level === 'soon' ? 'lock-soon' : 'lock-now');
+    const detail = `Ticket ${tickets[myTicketIndex]} · ${u.ahead===null?'—':u.ahead+' devant vous'} · ${u.time}`;
+    return `<div class="lockscreen" id="lockOverlay">
+      <div class="time">09:41</div><div class="date">Aujourd’hui</div>
+      <div class="notif-card ${cls}">
+        <div class="ic">🏥</div>
+        <div class="txt">
+          <b>AfriCare</b>
+          <span>${u.txt}</span><br>
+          <span style="opacity:.85">${detail}</span>
+          <div class="bar"><i style="width:${u.pct}%;background:#fff;"></i></div>
+        </div>
+      </div>
+      <div class="closelock" id="closeLock">Fermer l’aperçu</div>
+    </div>`;
+  }
+
+  function progressPopupHTML() {
+    const u = urgency(myTicketIndex);
+    return `<div class="progress-popup show" id="progressPopup">
+      <span class="pp-close" id="closePopup">✕</span>
+      <div class="pp-title">Suivi de votre file</div>
+      <div class="pp-row"><span>Ticket</span><b>${tickets[myTicketIndex]}</b></div>
+      <div class="pp-row"><span>Patients devant vous</span><b>${u.ahead===null?'—':u.ahead}</b></div>
+      <div class="pp-row"><span>Temps restant estimé</span><b>${u.time}</b></div>
+      <div class="progress-track" style="margin-top:6px;"><div class="progress-fill" style="width:${u.pct}%;background:${u.color}"></div></div>
+      <div style="font-size:12px;color:#6b6152;margin-top:8px;text-align:center;">${u.txt}</div>
+    </div>`;
+  }
+
+  function bindPatient() {
+    document.querySelectorAll('[data-doc]').forEach(b => {
+      b.addEventListener('click', () => { selectedDoc = doctors[+b.dataset.doc]; pScreen = 'slots'; render(); });
+    });
+    const back = document.querySelector('[data-back]');
+    if (back) back.addEventListener('click', () => { pScreen = back.dataset.back; render(); });
+    document.querySelectorAll('[data-slot]').forEach(b => {
+      b.addEventListener('click', () => { selectedSlot = b.dataset.slot; pScreen = 'pay'; render(); });
+    });
+    document.querySelectorAll('[data-pm]').forEach(b => {
+      b.addEventListener('click', () => { paymentMethod = b.dataset.pm; render(); });
+    });
+    const payBtn = document.getElementById('payBtn');
+    if (payBtn) payBtn.addEventListener('click', () => { pScreen = 'ticket'; render(); });
+    const sel = document.getElementById('ticketSelect');
+    if (sel) sel.addEventListener('change', e => { myTicketIndex = +e.target.value; render(); });
+    const lockBtn = document.getElementById('lockBtn');
+    if (lockBtn) lockBtn.addEventListener('click', () => { lockVisible = true; popupVisible = false; render(); });
+    const popupBtn = document.getElementById('popupBtn');
+    if (popupBtn) popupBtn.addEventListener('click', () => { popupVisible = true; lockVisible = false; render(); });
+    const closeLock = document.getElementById('closeLock');
+    if (closeLock) closeLock.addEventListener('click', () => { lockVisible = false; render(); });
+    const closePopup = document.getElementById('closePopup');
+    if (closePopup) closePopup.addEventListener('click', () => { popupVisible = false; render(); });
+    document.querySelectorAll('#bottomNav button').forEach(b => {
+      b.addEventListener('click', () => { pScreen = b.dataset.nav; render(); });
+    });
+  }
+
+  function proHTML() {
+    if (!proLoggedIn) {
+      return `<div class="login-box">
+        <div style="font-size:40px;margin-bottom:8px;">🩺</div>
+        <div style="font-family:'Baloo 2',sans-serif;font-weight:700;color:#0259BC;margin-bottom:4px;font-size:18px;">Espace professionnel</div>
+        <p style="font-size:13px;color:#8a7f6b;margin-bottom:16px;">Réservé aux médecins, dentistes et personnel médical autorisés</p>
+        <input placeholder="Identifiant professionnel">
+        <input type="password" placeholder="Mot de passe">
+        <button class="big-btn green" id="proLoginBtn">Se connecter</button>
+        <div class="conf-badge">🔒 Connexion sécurisée</div>
+      </div>`;
+    }
+    const doneCount = statuses.filter(s => s === 'done').length;
+    let rows = '';
+    tickets.forEach((t, i) => {
+      const lbl = { wait:'En attente', present:'En cours', done:'Terminé', skip:'Absent' }[statuses[i]];
+      rows += `<div class="qrow ${i===currentIndex?'current':''}"><span>${t}</span><span class="qtag ${statuses[i]}">${lbl}</span></div>`;
+    });
+    return `<div class="pro-header">
+        <span class="logout" id="proLogoutBtn">Se déconnecter</span>
+        <div class="who">Dr. Diop</div>
+        <div class="sub2">Cardiologie — Cabinet 2</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-box"><b>${tickets.length}</b><span>Aujourd’hui</span></div>
+        <div class="stat-box"><b>${doneCount}</b><span>Déjà vus</span></div>
+        <div class="stat-box"><b>${paused?'⏸':'▶'}</b><span>${paused?'Pause':'En cours'}</span></div>
+      </div>
+      <div style="padding:10px 14px 0;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:14px;color:#0259BC;">Vue d’ensemble du flux</div>
+      <div class="queue-list">${rows}</div>
+      <div class="action-row">
+        <button class="a-next" id="proNextBtn">✔ Suivant</button>
+        <button class="a-skip" id="proSkipBtn">✘ Absent</button>
+        <button class="a-pause" id="proPauseBtn">${paused?'▶ Reprendre':'⏸ Pause'}</button>
+      </div>`;
+  }
+
+  function bindPro() {
+    const lb = document.getElementById('proLoginBtn');
+    if (lb) lb.addEventListener('click', () => { proLoggedIn = true; render(); });
+    const lo = document.getElementById('proLogoutBtn');
+    if (lo) lo.addEventListener('click', () => { proLoggedIn = false; render(); });
+    const nb = document.getElementById('proNextBtn');
+    if (nb) nb.addEventListener('click', () => advance('done'));
+    const sb = document.getElementById('proSkipBtn');
+    if (sb) sb.addEventListener('click', () => advance('skip'));
+    const pb = document.getElementById('proPauseBtn');
+    if (pb) pb.addEventListener('click', () => { paused = !paused; render(); });
+  }
+
+  function advance(kind) {
+    if (paused) return;
+    if (statuses[currentIndex] === 'present') statuses[currentIndex] = kind;
+    let next = -1;
+    for (let i = currentIndex + 1; i < tickets.length; i++) {
+      if (statuses[i] === 'wait') { next = i; break; }
+    }
+    if (next !== -1) {
+      statuses[next] = 'present';
+      currentIndex = next;
+    } else {
+      currentIndex = tickets.length;
+    }
+    render();
+  }
+
+  function accueilHTML() {
+    let html = `<div class="pro-header">
+        <div class="who">Accueil — Clinique AfriCare</div>
+        <div class="sub2">Vue multi-services</div>
+      </div>
+      <div class="queue-list">
+        <div class="service-card" style="border-color:#0BA251;">
+          <span class="badge">Démo active</span>
+          <b>Cardiologie — Dr. Diop</b>
+          <span>${tickets.length} patients aujourd’hui</span>
+        </div>`;
+    otherServices.forEach(s => {
+      html += `<div class="service-card">
+        <span class="badge off">Non simulé</span>
+        <b>${s.name}</b>
+        <span>${s.count} patients (illustratif)</span>
+      </div>`;
+    });
+    html += `<hr style="border:none;border-top:1px solid #e3dccb;margin:14px 0;">
+      <div style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:14px;color:#0259BC;margin-bottom:8px;">Cardiologie — Dr. Diop</div>`;
+    tickets.forEach((t, i) => {
+      const lbl = { wait:'En attente', present:'En cours', done:'Terminé', skip:'Absent' }[statuses[i]];
+      html += `<div class="qrow"><span>${t}</span><span class="qtag ${statuses[i]}">${lbl}</span></div>`;
+    });
+    html += `<button class="addwalkin" id="addWalkinBtn">+ Enregistrer un patient sans smartphone</button></div>`;
+    return html;
+  }
+
+  function bindAccueil() {
+    const ab = document.getElementById('addWalkinBtn');
+    if (ab) ab.addEventListener('click', () => {
+      const num = parseInt(tickets[tickets.length - 1].slice(1), 10) + 1;
+      tickets.push('A' + num);
+      statuses.push('wait');
+      render();
+    });
+  }
+
+  document.getElementById('roleBar').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-role]');
+    if (!b) return;
+    currentRole = b.dataset.role;
+    document.querySelectorAll('#roleBar button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    pScreen = 'home';
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>
